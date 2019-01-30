@@ -1,0 +1,12 @@
+Computes regions of non covalent interactions using promolecular estamates of electron densities
+Uses MPI for cluster based computaion. unlike other versions of bonder this can only do all interactions. Use this if you want to do entire proteins.
+
+Making bonder
+Step one: have an MPI compiler, I use mpic++ if you use a differnt one edit the makefile
+Step two: run make
+step three: copy the mpibond excutable to where you want to install it
+
+Usage
+bond h will give the varous modes the program has
+calling bond with just a letter will tell you the proper arguments for that mode of opperation
+

@@ -7,6 +7,8 @@ Step two: run make
 step three: copy the mpibond excutable to where you want to install it
 
 Usage
-bond h will give the varous modes the program has
-calling bond with just a letter will tell you the proper arguments for that mode of opperation
+This will need to be run with mpiexeec I use:
+mpiexec --map-by socket --hostfile ~/mpihosts mpibond a input.xyz 0.02 0.2 output 5
+
+While this program accepts all of the options that the non-cluster version does only "bond a" is useful to run on a cluster. All other options only run on a single thread. 
 

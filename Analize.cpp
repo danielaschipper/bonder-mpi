@@ -242,7 +242,7 @@ void* assignJobs(void* nah)
 				bool found = false;
 				for (std::list<center>::iterator iti = ((*centers).begin()); iti != ((*centers).end()); ++iti)
 				{
-					if ((*iti).disi(nextJob.cent) < 5)
+					if ((*iti).disi(nextJob.cent) < 100)
 					{
 						found = true;
 						break;

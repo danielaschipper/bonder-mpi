@@ -122,10 +122,28 @@ void slave(int argc, char *argv[])
 	res = std::stod(argv[3]);
 	cutoff = std::stod(argv[4]);
 	outputFile =  argv[5];
-	if (argc == 6)
+	bool sphere = false; 
+	double centerx,centery,centerz,dist;
+	if (argv[1][0] == 's')
+	{
+		sphere = true; 
+		if (argc == 10)
+		{
+			centerx=std::stod(argv[6]);centery=std::stod(argv[7]);centerz=std::stod(argv[8]);dist=std::stod(argv[9]);
+			makeCube = 1;
+		}
+		else
+		{
+			centerx=std::stod(argv[7]);centery=std::stod(argv[8]);centerz=std::stod(argv[9]);dist=std::stod(argv[10]);	
+			makeCube = std::stoi(argv[6]);
+		}
+	}
+	else if (argc == 6)
 		makeCube = 1;
 	else
 		makeCube = std::stoi(argv[6]);
+
+
 
 
 	std::cout << "waiting" << std::endl;
@@ -146,7 +164,12 @@ void slave(int argc, char *argv[])
 		else if (signal == 1)
 			slaveOuput(data);
 		else
-			drawLines((int)(data[0]),res,cutoff,inputFile);
+		{
+			if (!sphere)
+				drawLines((int)(data[0]),res,cutoff,inputFile);
+			else
+				drawLinesCent((int)(data[0]),res,cutoff,inputFile,centerx,centery,centerz,dist);
+		}
 
 	}
 }

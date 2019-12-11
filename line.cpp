@@ -93,3 +93,52 @@ void drawLines(int a,double res, double cutoff, wfnData* inputFile)
 
 
 }
+
+
+void drawLinesCent(int a,double res,double cutoff, wfnData* inputFile,double centerx,double centery,double centerz,double dist)
+{
+	std::queue<double*> *points = new std::queue<double*>;
+	for(int i = 0; i < 10; i++)
+	{
+		if (a+i >= inputFile->nuc)
+			break;
+		if((inputFile->x[a+i]-centerx)*(inputFile->x[a+i]-centerx)+(inputFile->y[a+i]-centery)*(inputFile->y[a+i]-centery)+(inputFile->z[a+i]-centerz)*(inputFile->z[a+i]-centerz)>dist*dist)
+			continue; 
+
+		for (int b= 0; b < a+i; b++)
+		{
+			
+			if((inputFile->x[b]-centerx)*(inputFile->x[b]-centerx)+(inputFile->y[b]-centery)*(inputFile->y[b]-centery)+(inputFile->z[b]-centerz)*(inputFile->z[b]-centerz) > dist*dist)
+				continue; 
+
+
+
+
+			double* center = drawline(a+i,b,res,cutoff,inputFile);
+			if (center)
+			{
+				points->push(center);
+			}
+		}
+	}
+	char signal = 'c';
+	MPI_Send(&signal, 1, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+	int numOfCent = points->size();
+	MPI_Send(&numOfCent, 1, MPI_INT, 0, 2, MPI_COMM_WORLD);
+	double* toSend = new double[numOfCent*3];
+	for (int i = 0; i < numOfCent; i++)
+	{
+		double* cent = points->front();
+		toSend[3*i] = cent[0];
+		toSend[3*i+1] = cent[1];
+		toSend[3*i+2] = cent[2];
+		points->pop();
+		delete cent;
+	}
+	MPI_Send(toSend, 3*numOfCent, MPI_DOUBLE, 0, 5, MPI_COMM_WORLD);
+	delete toSend;
+	delete points;
+
+
+
+}

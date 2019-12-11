@@ -206,6 +206,26 @@ void runAll(double res, double cutoff,std::string outputfile,int size, wfnData* 
 
 }
 
+//yes it is exacly the same, all work is done by the slaves, different signiture is required to ensure that file parsing is done correctly
+void runAllCentre(double res, double cutoff,std::string outputfile,int size, wfnData* inputFile,int makeCube,double x, double y, double z,double dist)
+{
+
+	int world_size;
+    	MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
+
+	//set up multithreading
+	initRanks(world_size);
+	pthread_t* threads = new pthread_t[2];
+	pthread_create(&threads[0], NULL, moniter, 0);
+	createLine(inputFile->nuc);
+
+	assignJobs(0);
+	std::cout << "done" << std::endl;
+
+
+}
+
 std::vector<std::string> readFileLines(const char* filename)
 {
 	std::vector<std::string> file;
@@ -427,6 +447,29 @@ int master(int argc, char *argv[])
 		return 0;
 	}
 	
+	//letter file res cutoff output centrex centery centerz dist
+	if (argv[1][0] == 's')
+	{
+		if (argc != 10 && argc != 11)
+		{
+			printf("arguments are bonder a inputFile res cutoff outputFile centerx centery centerz dist\n");
+			return 0;
+		}
+
+		try
+		{
+			if (argc == 10)
+				runAllCentre(std::stod(argv[3]), std::stod(argv[4]), argv[5], SIZE, inputFile,true,std::stod(argv[6]),std::stod(argv[7]),std::stod(argv[8]),std::stod(argv[9]));
+			else
+				runAllCentre(std::stod(argv[3]), std::stod(argv[4]), argv[5], SIZE, inputFile, std::stoi(argv[6]),std::stod(argv[7]),std::stod(argv[8]),std::stod(argv[9]),std::stod(argv[10]));
+		}
+		catch(const std::invalid_argument& ia)
+		{
+			std::cout << "error in arguments" << std::endl;
+			return 1;
+		}
+		return 0;
+	}
 
 	//letter file res cutoff output
 	if (argv[1][0] == 'a')

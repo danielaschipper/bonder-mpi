@@ -11,9 +11,136 @@
 #include <mpi.h>
 #include <vector>
 #include <unistd.h>
+#include <argp.h>
 
 
 const int SIZE = 600;
+
+struct arguments
+{
+	char* type;
+	char *inputFile="input.wfn";
+	double res=0.02;     
+	double cutoff=0.3;
+	char *output="output"; 
+	int cubesize=1;
+	double x1=0,x2=1,y1=0,y2=1,z1=0,z2=1;
+	int atom1=0,atom2=1,atom3=2,atom4=3;
+	char* dir=".";
+	char* configFile="config";
+	double dist = 1;
+};
+
+
+static struct argp_option options[] =
+{
+	{"input",'i',"FILENAME",0,"The input wavefunction file"},
+	{"resolution",'r',"VOXELSIZE",0,"The length in amstrongs of a single voxel in the intergration grid"},
+	{"cutoff",'c',"RDGCUTTOFF",0,"The maximium value for RDG"},
+	{"output",'o',"OUTPUTPREFIX",0,"The file prefix for all output files"},
+	{"cubesize",'q',"CUBESCALE",0,"Reduces the resolution for output cubefiles by the given factor, 0 will prvent cube files from being written"},
+	{"x1",1,"XSTART",0,"Either the x cordanate to start for point mode, the x coordanate of the sphere or the x cordante for one corner in cube mode"},
+	{"y1",2,"YSTART",0,"Either the y cordanate to start for point mode, the y coordanate of the sphere or the y cordante for one corner in cube mode"},
+	{"z1",3,"ZSTART",0,"Either the z cordanate to start for point mode, the z coordanate of the sphere or the z cordante for one corner in cube mode"},
+	{"x2",4,"XEND",0,"The x cordanate for the second corner in cube mode"},
+	{"y2",4,"YEND",0,"The y cordanate for the second corner in cube mode"},
+	{"z2",4,"ZEND",0,"The z cordanate for the second corner in cube mode"},
+	{"atom1",'1',"ATOMNUMBER",0,"The first atom for use in line, trinagle or quad mode"},
+	{"atom2",'2',"ATOMNUMBER",0,"The first atom for use in line, trinagle or quad mode"},
+	{"atom3",'3',"ATOMNUMBER",0,"The first atom for use in  trinagle or quad mode"},
+	{"atom4",'4',"ATOMNUMBER",0,"The first atom for use in quad mode"},
+	{"directory",'d',"FOLDER",0,"The folder to put output files in"},
+	{"config",'f',"CONFIGFILE",0,"A file containing all of the options to run bonder, only in input mode"},
+	{"radius",'l',"RADIUS",0,"In sphere mode, defines the radius of the region to look at"},
+	{0}
+};
+
+static error_t parse_opt (int key, char *arg, struct argp_state *state)
+{
+	arguments *argument = (arguments*)(state->input);
+
+	switch (key)
+	{
+		case 'i':
+			argument->inputFile = arg;
+			break;
+		case 'r':
+			argument->res = std::stod(arg);
+			break;
+		case 'c':
+			argument->cutoff = std::stod(arg);
+			break;
+		case 'l':
+			argument->dist = std::stod(arg);
+			break;
+		case 'o':
+			argument->output = arg;
+			break;
+		case 'q':
+			argument->cubesize = std::stoi(arg);
+                        break;
+		case 1:
+			argument->x1 = std::stod(arg);
+                        break;
+		case 2:
+                        argument->y1 = std::stod(arg);
+                        break;
+		case 3:
+                        argument->z1 = std::stod(arg);
+                        break;
+		case 4:
+                        argument->x2 = std::stod(arg);
+                        break;
+		case 5:
+                        argument->y2 = std::stod(arg);
+                        break;
+		case 6:
+                        argument->y1 = std::stod(arg);
+                        break;
+		case '1':
+                        argument->atom1 = std::stoi(arg);
+                        break;
+		case '2':
+                        argument->atom2 = std::stoi(arg);
+                        break;
+		case '3':
+                        argument->atom3 = std::stoi(arg);
+                        break;
+		case '4':
+                        argument->atom4 = std::stoi(arg);
+                        break;
+		case 'd':
+                        argument->dir = arg;
+                        break;
+		case 'f':
+			argument->configFile=arg;
+		case ARGP_KEY_ARG:
+			if (state->arg_num >= 1)
+			{
+				argp_usage(state);
+			}
+			else
+			{
+				argument->type = arg;
+			}
+			break;
+		case ARGP_KEY_END:
+			if (state->arg_num < 1)
+			{
+				argp_usage (state);
+			}
+			break;
+		default:
+			return ARGP_ERR_UNKNOWN;
+	}
+	return 0;
+}
+
+static char args_doc[] = "type";
+static char doc[] = "Bonder, a program designed to identify and map non covalent interactions";
+static struct argp argp = {options, parse_opt, args_doc, doc};
+
+
 
 wfnData* init(std::string file)
 {
@@ -301,31 +428,20 @@ void useInputFile(char* filename)
 
 int master(int argc, char *argv[])
 {
-	if (argc == 1)
-	{
-		printf("bonder h for help\n");
-		return 0;
-	}
+	struct arguments arguments;
+	argp_parse (&argp, argc, argv, 0, 0, &arguments);
 
 
-	if (argv[1][0] == 'h')
+	if (arguments.type[0] == 'f')
 	{
-		printf("the first letter determins the wht the program will do \n p looks at a point and determins the volume around it\n l looks at a line between two atoms\n a looks for all interactions\n g prints out a grid\n h displays this message\n for more detail on an operation type bonder letter");
-		return 0;
-	}
-
-	if (argv[1][0] == 'f')
-	{
-		useInputFile(argv[2]);
+		useInputFile(arguments.configFile);
 		return 0;
 	}
 
 	wfnData *inputFile = 0;
-	if (argc != 2)
-	{
 		try
 		{
-			inputFile = init(argv[2]);
+			inputFile = init(arguments.inputFile);
 
 		}
 		catch (const std::invalid_argument& ia) 
@@ -333,186 +449,56 @@ int master(int argc, char *argv[])
 			std::cout << "error in parssing wavefunction data, if you have more than 100 atoms 'bonder fixwfn' must be run" << std::endl;
 			return 1;
 		}
-	}
 
 	std::cout << "data read" << std::endl;
 	//letter file x y z res cutoff
-	if (argv[1][0] == 'p')
+	if (arguments.type[0] == 'p')
 	{
-		if (argc != 9 && argc != 10 )
-		{
-			printf("arguments are bonder p inputFile x y z res cutoff outputFile\n");
-			return 0;
-		}
-		bool sucsess = false;
+		bool sucsess;
 		analysisBatch* batch = new analysisBatch(*inputFile);
 		analysis analize = analysis();
-		try
-		{
-			analize.setUpAnalysisBatch( std::stod(argv[3]), std::stod(argv[4]), std::stod(argv[5]), std::stod(argv[6]),batch);
-			printf("%f \n", (*batch).RDG(std::stod(argv[3]), std::stod(argv[4]), std::stod(argv[5])));
-			if (argc == 10)
-			{
-				analize.anilizePoint();
-			}
-			else
-			{
-				analize.anilizePoint();
-			}
-		}
-		catch(const std::invalid_argument& ia)
-		{
-			std::cout << "error in arguments" << std::endl;
-			return 1;
-		}
+		analize.setUpAnalysisBatch( arguments.x1 , arguments.y1, arguments.z1, arguments.res,batch);
 
-		if (sucsess)
-		{
-			printf("point given is in region\n");
-		}
-		else
-		{
-			printf("point given is not in region\n");
-		}
+		analize.anilizePoint();
+
 		return 0;
 	}
 
 	//letter file 1 2 res cutoff
-	if (argv[1][0] == 'l')
+	if (arguments.type[0] == 'l')
 	{
-		if (!(argc == 8 || argc == 9))
-		{
-			printf("arguments are bonder l inputfile atom1 atom2 res cutoff outputfile\n");
-			return 0;
-		}
-		try
-		{
-			if (argc == 8)
-				drawline(std::stoi(argv[3]), std::stoi(argv[4]), std::stod(argv[5]), std::stod(argv[6]), argv[7], SIZE, inputFile,1);
-			else
-				drawline(std::stoi(argv[3]), std::stoi(argv[4]), std::stod(argv[5]), std::stod(argv[6]), argv[7], SIZE, inputFile, std::stoi(argv[8]));
-		}
-		catch(const std::invalid_argument& ia)
-		{
-			std::cout << "error in arguments" << std::endl;
-			return 1;
-		}
+		drawline(arguments.atom1, arguments.atom2, arguments.res, arguments.cutoff, arguments.output, SIZE, inputFile, arguments.cubesize);
 		return 0;
 
 	}
 
 	//letter file 1 2 res cutoff
-	if (argv[1][0] == 't')
+	if (arguments.type[0] == 't')
 	{
-		if (!(argc == 8 || argc == 9))
-		{
-			printf("arguments are bonder t inputfile atom1 atom2 atom3 res cutoff outputfile\n");
-			return 0;
-		}
-		try
-		{
-			if (argc == 9)
-				drawtrig(std::stoi(argv[3]), std::stoi(argv[4]),std::stoi(argv[5]), std::stod(argv[6]), std::stod(argv[7]), argv[8], SIZE, inputFile,1);
-			else
-				drawtrig(std::stoi(argv[3]), std::stoi(argv[4]),std::stoi(argv[5]), std::stod(argv[6]), std::stod(argv[7]), argv[8], SIZE, inputFile, std::stoi(argv[9]));
-		}
-		catch(const std::invalid_argument& ia)
-		{
-			std::cout << "error in arguments" << std::endl;
-			return 1;
-		}
+				drawtrig(arguments.atom1, arguments.atom2,arguments.atom3, arguments.res, arguments.cutoff, arguments.output, SIZE, inputFile, arguments.cubesize);
 		return 0;
 
 	}
-	
-	if (argv[1][0] == 'q')
-	{
-		if (!(argc == 9 || argc == 10))
-		{
-			printf("arguments are bonder t inputfile atom1 atom2 atom3 res cutoff outputfile\n");
-			return 0;
-		}
-		try
-		{
-			if (argc == 9)
-				drawquad(std::stoi(argv[3]), std::stoi(argv[4]),std::stoi(argv[5]),std::stoi(argv[6]), std::stod(argv[7]), std::stod(argv[8]), argv[1], SIZE, inputFile,1);
-			else
-				drawquad(std::stoi(argv[3]), std::stoi(argv[4]),std::stoi(argv[5]),std::stoi(argv[6]), std::stod(argv[7]), std::stod(argv[8]), argv[1], SIZE, inputFile, std::stoi(argv[9]));
-		}
-		catch(const std::invalid_argument& ia)
-		{
-			std::cout << "error in arguments" << std::endl;
-			return 1;
-		}
-		return 0;
-	}
-	
-	//letter file res cutoff output centrex centery centerz dist
-	if (argv[1][0] == 's')
-	{
-		if (argc != 10 && argc != 11)
-		{
-			printf("arguments are bonder a inputFile res cutoff outputFile centerx centery centerz dist\n");
-			return 0;
-		}
 
-		try
-		{
-			if (argc == 10)
-				runAllCentre(std::stod(argv[3]), std::stod(argv[4]), argv[5], SIZE, inputFile,true,std::stod(argv[6]),std::stod(argv[7]),std::stod(argv[8]),std::stod(argv[9]));
-			else
-				runAllCentre(std::stod(argv[3]), std::stod(argv[4]), argv[5], SIZE, inputFile, std::stoi(argv[6]),std::stod(argv[7]),std::stod(argv[8]),std::stod(argv[9]),std::stod(argv[10]));
-		}
-		catch(const std::invalid_argument& ia)
-		{
-			std::cout << "error in arguments" << std::endl;
-			return 1;
-		}
+	if (arguments.type[0] == 'q')
+	{
+		drawquad(arguments.atom1, arguments.atom2,arguments.atom3,arguments.atom4, arguments.res, arguments.cutoff, arguments.output, SIZE, inputFile, arguments.cubesize);
 		return 0;
 	}
+
 
 	//letter file res cutoff output
-	if (argv[1][0] == 'a')
+	if (arguments.type[0] == 'a')
 	{
-		if (argc != 6 && argc != 7)
-		{
-			printf("arguments are bonder a inputFile res cutoff outputFile\n");
-			return 0;
-		}
-
-		try
-		{
-			if (argc == 6)
-				runAll(std::stod(argv[3]), std::stod(argv[4]), argv[5], SIZE, inputFile,true);
-			else
-				runAll(std::stod(argv[3]), std::stod(argv[4]), argv[5], SIZE, inputFile, std::stoi(argv[6]));
-		}
-		catch(const std::invalid_argument& ia)
-		{
-			std::cout << "error in arguments" << std::endl;
-			return 1;
-		}
+		runAll(arguments.res, arguments.cutoff, arguments.output, SIZE, inputFile, arguments.cubesize);
 		return 0;
 	}
 
 	//letter file minx miny minz maxx maxy maxz res outputFile
-	if (argv[1][0] == 'g')
+	if (arguments.type[0] == 'g')
 	{
-		if (argc != 11 )
-		{
-			printf("arguments are bonder g inputFile minx miny minz maxx maxy maxz res outputFile\n");
-			return 0;
-		}
 		analysisBatch* batch = new analysisBatch(*inputFile);
-		try
-		{
-				outputCube(std::stod(argv[3]), std::stod(argv[4]), std::stod(argv[5]), std::stod(argv[6]), std::stod(argv[7]), std::stod(argv[8]), std::stod(argv[9]), argv[10], *inputFile, 1.0, batch, 1);
-		}
-		catch(const std::invalid_argument& ia)
-		{
-			std::cout << "error in arguments" << std::endl;
-			return 1;
-		}
+		outputCube(arguments.x1, arguments.y1, arguments.z1, arguments.x2, arguments.y2, arguments.z2, arguments.res, arguments.output, *inputFile, 1.0, batch, arguments.cubesize);
 		printf("done");
 		return 0;
 	}
@@ -520,6 +506,15 @@ int master(int argc, char *argv[])
 	//bool sucsess;
 	//anilizePoint(0, 0, 0, 0, 2000, 2000, 2501, &sucsess);
 	//printf("%d", sucsess);
+//letter file res cutoff output centrex centery centerz dist
+	if (argv[1][0] == 's')
+	{
+
+		runAllCentre(arguments.res, arguments.cutoff, arguments.output, SIZE, inputFile,arguments.x1, arguments.y1, arguments.z1,arguments.cubesize,arguments.dist);
+		return 0;
+	}
+
+
 	printf("bonder h for help\n");
 	return 0;
 }

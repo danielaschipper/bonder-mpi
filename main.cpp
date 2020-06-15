@@ -7,7 +7,7 @@
 #include <iostream>
 #include <thread>
 #include <fstream>
-#include "slave.h"
+#include "minion.h"
 #include <mpi.h>
 #include <vector>
 #include <unistd.h>
@@ -333,7 +333,7 @@ void runAll(double res, double cutoff,std::string outputfile,int size, wfnData* 
 
 }
 
-//yes it is exacly the same, all work is done by the slaves, different signiture is required to ensure that file parsing is done correctly
+//yes it is exacly the same, all work is done by the minions, different signiture is required to ensure that file parsing is done correctly
 void runAllCentre(double res, double cutoff,std::string outputfile,int size, wfnData* inputFile,int makeCube,double x, double y, double z,double dist)
 {
 
@@ -530,7 +530,7 @@ int main(int argc, char *argv[])
 	if (!world_rank)
 		master(argc,argv);
 	else
-		slave(argc,argv);
+		minion(argc,argv);
 }
 
 #ifdef preargs

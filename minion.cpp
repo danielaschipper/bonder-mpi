@@ -143,7 +143,7 @@ bool edgeComp(edgepoint i, edgepoint j)
         return i.Z < j.Z;
 }
 
-void slaveFill(double *data)
+void minionFill(double *data)
 {
 	bool sucsess;
 	analysisBatch* batch = new analysisBatch(*inputFile);
@@ -221,7 +221,7 @@ void slaveFill(double *data)
 
 
 
-void slaveOuput(double* data)
+void minionOuput(double* data)
 {
 	analysisBatch* batch = new analysisBatch(*inputFile);
 	(*batch).setUpBatch(data[0], data[1], data[2], res);
@@ -232,7 +232,7 @@ void slaveOuput(double* data)
 	delete batch;
 }
 
-void slave(int argc, char *argv[])
+void minion(int argc, char *argv[])
 {
 	struct arguments arguments;
 	argp_parse (&argp, argc, argv, 0, 0, &arguments);
@@ -274,9 +274,9 @@ void slave(int argc, char *argv[])
 		double data[9];
 		MPI_Recv(data, 9, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 		if (signal == 0)
-			slaveFill(data);
+			minionFill(data);
 		else if (signal == 1)
-			slaveOuput(data);
+			minionOuput(data);
 		else
 		{
 			if (!sphere)

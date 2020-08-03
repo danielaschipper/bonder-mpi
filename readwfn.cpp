@@ -39,7 +39,7 @@ double DFD(string input)
 }
 
 
-int selectAtom(std::string name)
+int selectAtom(std::string name,int line)
 {
 	std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 	if (name == "h") return 0;
@@ -60,7 +60,8 @@ int selectAtom(std::string name)
 	if (name == "s") return 15;
 	if (name == "cl") return 16;
 	if (name == "ar") return 17;
-	cout << "atom not known, only atoms up to Ar are suported" << std::endl;
+	cout << "atom not known, only atoms up to Ar are suported, error on line:" << line+2<< std::endl;
+	cout << "atom read is: " << name << std::endl;
 	exit(1);
 }
 
@@ -96,7 +97,7 @@ wfnData* readFile(string file)
 		output->x[i] = stod(tokens[1]) / 0.52917721092;
 		output->y[i] = stod(tokens[2]) / 0.52917721092;
 		output->z[i] = stod(tokens[3]) / 0.52917721092;
-		output->type[i] = selectAtom(tokens[0]);
+		output->type[i] = selectAtom(tokens[0],i);
 		output->name[i] = tokens[0];
 	}
 	return output;

@@ -84,10 +84,10 @@ void drawLines(int a,double res, double cutoff, wfnData* inputFile)
 		toSend[3*i+1] = cent[1];
 		toSend[3*i+2] = cent[2];
 		points->pop();
-		delete cent;
+		delete[] cent;
 	}
 	MPI_Send(toSend, 3*numOfCent, MPI_DOUBLE, 0, 5, MPI_COMM_WORLD);
-	delete toSend;
+	delete[] toSend;
 	delete points;
 
 
@@ -136,7 +136,7 @@ void drawLinesCent(int a,double res,double cutoff, wfnData* inputFile,double cen
 		delete cent;
 	}
 	MPI_Send(toSend, 3*numOfCent, MPI_DOUBLE, 0, 5, MPI_COMM_WORLD);
-	delete toSend;
+	delete[] toSend;
 	delete points;
 
 

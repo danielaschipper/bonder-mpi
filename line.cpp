@@ -19,7 +19,7 @@ double* drawline(int a, int b, double res, double cutoff,  wfnData* inputFile)
                 return 0;
         }
 
-        printf("testing line between %d and %d\n",a,b);
+        //printf("testing line between %d and %d\n",a,b);
 
         analysisBatch* batch = new analysisBatch(*inputFile);
         double jumpScaler = res * 5/ ((highX - lowX)*(highX - lowX) + (highY - lowY)*(highY - lowY) + (highZ - lowZ)*(highZ - lowZ));
@@ -43,7 +43,7 @@ double* drawline(int a, int b, double res, double cutoff,  wfnData* inputFile)
                         vals[0] = lowX + k*dx;
 			vals[1] = lowY + k*dy;
 			vals[2] = lowZ + k*dz;
-			printf("found point\n");
+			//printf("found point\n");
    			delete batch; 
 			return vals;
                         

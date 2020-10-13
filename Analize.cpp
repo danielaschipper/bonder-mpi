@@ -161,7 +161,7 @@ void* moniter(void* args)
 				(*jobQueue).push(newJob);
 				mutexJob.unlock();
 			}
-			delete incomingData;
+			delete[] incomingData;
 			std::cout << "jobs: " << (*jobQueue).size() << " ranks: " << (*openRanks).size() << " max ranks: " << totalRanks << std::endl;
 		}
 		else

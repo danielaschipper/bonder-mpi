@@ -223,6 +223,7 @@ void minionFill(double *data)
 
 void minionOuput(double* data)
 {
+	std::cout << "output" << std::endl;
 	analysisBatch* batch = new analysisBatch(*inputFile);
 	(*batch).setUpBatch(data[0], data[1], data[2], res);
 	(*batch).cull(data[0], data[1], data[2]);
@@ -250,6 +251,7 @@ void minion(int argc, char *argv[])
 	res = arguments.res;
 	cutoff = arguments.cutoff;
 	outputFile =  arguments.output;
+	makeCube = arguments.cubesize;
 	bool sphere = false; 
 	double centerx,centery,centerz,dist;
 	if (arguments.type[0] == 's')
@@ -276,7 +278,9 @@ void minion(int argc, char *argv[])
 		if (signal == 0)
 			minionFill(data);
 		else if (signal == 1)
+		{
 			minionOuput(data);
+		}
 		else
 		{
 			if (!sphere)

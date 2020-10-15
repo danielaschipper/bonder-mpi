@@ -268,7 +268,7 @@ void minion(int argc, char *argv[])
 		int signal;
 		MPI_Recv(&signal, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 		//std::cout << "recived" << std::endl;
-		if (signal ==3)
+		if (signal ==-1)
 		{
 			MPI_Finalize();
 			return;

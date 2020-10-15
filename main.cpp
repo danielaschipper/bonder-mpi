@@ -320,12 +320,12 @@ void runAll(double res, double cutoff,std::string outputfile,int size, wfnData* 
 	int world_size;
     	MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-
-	//set up multithreading
 	initRanks(world_size);
+
+	createLine(inputFile->nuc);
+	//set up multithreading
 	pthread_t* threads = new pthread_t[2];
 	pthread_create(&threads[0], NULL, moniter, 0);
-	createLine(inputFile->nuc);
 
 	assignJobs(0);
 	std::cout << "done" << std::endl;
@@ -454,7 +454,6 @@ int master(int argc, char *argv[])
 	//letter file x y z res cutoff
 	if (arguments.type[0] == 'p')
 	{
-		bool sucsess;
 		analysisBatch* batch = new analysisBatch(*inputFile);
 		analysis analize = analysis();
 		analize.setUpAnalysisBatch( arguments.x1 , arguments.y1, arguments.z1, arguments.res,batch);

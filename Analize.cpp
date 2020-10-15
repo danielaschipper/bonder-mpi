@@ -15,6 +15,7 @@
 
 std::mutex mutexCube,mutexCenters,mutexJob,mutexRank;
 
+
 struct grid
 {
         double minX,minY,minZ,maxX,maxY,maxZ;
@@ -167,12 +168,6 @@ void* moniter(void* args)
 		else
 		{
 			std::cout << "jobs: " << (*jobQueue).size() << " ranks: " << (*openRanks).size() << " max ranks: " << totalRanks << std::endl;
-			if ( (*jobQueue).empty() && ((*openRanks).size() == totalRanks -1) )
-			{
-				int term =3;	
-				MPI_Bcast(&term,1,MPI_INT, 0, MPI_COMM_WORLD);
-				quick_exit(0);
-			}
 		}
 
 		mutexRank.lock();
@@ -279,6 +274,27 @@ void* assignJobs(void* nah)
 				launchJob(nextJob);
 			}
 
+		}
+		else if ((*jobQueue).empty()&&(*openRanks).size() != 0)
+		{
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+			if ((*jobQueue).empty()&&(*openRanks).size() != 0)
+			{
+				std::cout << "culling rank"  << std::endl;
+				int rank = (*openRanks).front();
+				(*openRanks).pop();
+				int termsig = -1;
+				totalRanks -= 1;
+				MPI_Send(&termsig, 1, MPI_INT, rank, 0, MPI_COMM_WORLD);
+
+				if(totalRanks == 0)
+				{
+					//MPI_Finalize();
+                        		return 0;	
+				}
+			}
+			mutexRank.unlock();
 		}
 		else
 		{
